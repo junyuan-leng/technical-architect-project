@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: django
+  template:
+    metadata:
+      labels:
+        app: django
+    spec:
+      containers:
+      - name: django
+        image: junyuanleng/url-shortener-django:v1 # a sample django app
+        command: ["/bin/bash", "/code/run.sh"]
+        ports:
+        - containerPort: 8000
+        env:
+          - name: POSTGRES_NAME
+            valueFrom:
+              secretKeyRef:
+                name: django-secret
+                key: POSTGRES_NAME
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: django-secret
+                key: POSTGRES_USER
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: django-secret
+                key: POSTGRES_PASSWORD
+          - name: POSTGRES_HOST
+            value: postgres-service
+        livenessProbe:
+           httpGet:
+             path: /
+             port: 8000
+           initialDelaySeconds: 20
+           periodSeconds: 5
+           failureThreshold: 3
